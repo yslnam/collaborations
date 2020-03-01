@@ -188,7 +188,7 @@ def main(input_filepath, output_filepath):
     y_train_rf.to_csv(f'{output_filepath}/y_train_rf.csv', index = False, header = 'SalePrice')
     X_test_rf.to_csv(f'{output_filepath}/X_test_rf.csv', index = False)
 
-    X_train_norm, y_train_norm, X_test_norm = Train_test_random_forest(final_df, ord_feat_num, ord_feat_cat, nom_feat, cont_feat)
+    X_train_norm, y_train_norm, X_test_norm = Train_test_normalized(final_df, ord_feat_num, ord_feat_cat, nom_feat, cont_feat)
 
     X_train_norm.to_csv(f'{output_filepath}/X_train_norm.csv', index = False)
     y_train_norm.to_csv(f'{output_filepath}/y_train_norm.csv', index = False, header = 'SalePrice')
