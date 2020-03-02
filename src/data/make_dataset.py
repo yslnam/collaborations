@@ -96,6 +96,13 @@ def Feature_enginiering(hdf):
     hdf.drop(columns = 'MiscFeature', inplace = True)
     hdf.drop(columns = 'TotRmsAbvGrd', inplace = True)
 
+    # skew_feat = ['LotFrontage', 'LotArea', 'MasVnrArea', 
+    # 'TotalBsmtSF', '1stFlrSF', '2ndFlrSF', 'PoolArea', 
+    # 'LowQualFinSF', 'GrLivArea',  'TotalPorchAreasSF']
+
+    # for col in skew_feat:
+    #     hdf[col] =pd.Series(stats.boxcox(hdf[col]+1)[0])
+
     ord_feat_num = set(ord_feat_num).union(set(['TotalBath', 'OtherRoomsAbvGrd', 'Remodeled'])) - \
     set(['BsmtFullBath', 'BsmtHalfBath', 'FullBath', 'HalfBath', 'TotRmsAbvGrd',' KitchenAbvGr', 'GarageCars'])
 
@@ -117,6 +124,14 @@ def Train_test_random_forest(hdf, ord_feat_num, ord_feat_cat, nom_feat, cont_fea
     y_train = np.log1p(X_train.loc[~X_train['SalePrice'].isnull(), 'SalePrice'])
 
     X_train.drop(columns = ['SalePrice'], inplace = True)
+
+
+
+    X_train.drop((X_train.loc[X_train['GrLivArea']>4400, :]).index, inplace = True)
+
+    X_train.drop((X_train.loc[X_train['LotArea']>100000, :]).index, inplace = True)
+
+    X_train.drop((X_train.loc[X_train['LotFrontage']>250, :]).index, inplace = True)
 
     X_test = hdf.loc[hdf['SalePrice'].isnull(), :].drop(columns = ['SalePrice'])
 
@@ -147,6 +162,9 @@ def Train_test_normalized(hdf, ord_feat_num, ord_feat_cat, nom_feat, cont_feat):
             X.loc[:, col] = (X[col] - np.mean(X[col]))/np.std(X[col], ddof=1)
 
     X_train = X.loc[~X['SalePrice'].isnull(), :]
+
+    ## Last mod
+    X_train.drop((X_train.loc[X_train['GarageCars']>2.5, :]).index, inplace = True)
 
     X_train.drop((X_train.loc[X_train['GrLivArea']>4.3, :]).index, inplace = True)
 
