@@ -3,6 +3,7 @@ library(readr)
 library(ggplot2)
 house_df <-  read_csv('train.csv')
 View(house_df)
+
 subset <-  house_df[1:11]
 
 subset <- subset %>% 
@@ -11,7 +12,9 @@ subset <- subset %>%
 
 summary(subset)
 View(subset)
+
 #MSSubClass
+
 subset %>% 
   group_by(MSSubClass) %>% 
   count()
@@ -48,6 +51,7 @@ plot_lotshape
 
 
 #Street
+
 subset %>% 
   group_by(Street) %>% 
   count()
@@ -64,5 +68,6 @@ ggplot(subset, aes(x = LotConfig, y = SalePrice)) + geom_boxplot()
  
 ggplot(subset,aes(x = LotConfig, y = log(LotArea))) + geom_boxplot()
 
-ggplot(subset, aes(x = log(LotArea), y = log(SalePrice))) + geom_point() 
+ggplot(subset, aes(x = log(LotArea), y = log(SalePrice))) + geom_point() + labs(title = "Example of log transfromed numerical features", x = 'Lot Area', y = 'Sale Price')
+ggplot(subset, aes(x = LotArea,y = SalePrice)) + geom_point() + labs( "Untransfromed numerical values", x = 'Lot Area', y = 'Sale Price')
        
