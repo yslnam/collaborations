@@ -29,9 +29,16 @@ def clean_dataframe(hdf):
                                                                         'LwQ': 2, 'Unf': 1, 
                                                                         np.nan: 0})
 
-    hdf[['Fence']] = hdf[['Fence']].replace({'MnPrv': 'HasFence', 'GdWo': 'HasFence', 
-                                            'GdPrv': 'HasFence', 'MnWw': 'HasFence', 
-                                            np.nan: 'NoFence'})
+    hdf[['Fence']] = hdf[['Fence']].replace({'MnPrv': 1, 'GdWo': 1, 
+                                            'GdPrv': 1, 'MnWw': 1, 
+                                            np.nan: 0})
+
+    for col in ['GarageYrBlt', 'GarageArea', 'GarageCars']:
+        hdf[col].fillna(0, inplace = True)
+    for col in ['GarageType', 'GarageFinish', 'GarageQual', 'GarageCond']:
+        hdf[col].fillna('NoGarage', inplace = True)
+    for col in ['BsmtQual', 'BsmtCond', 'BsmtExposure', 'BsmtFinType1', 'BsmtFinType2']:
+        hdf[col].fillna('NoBsmt', inplace = True)
 
     # Input LotFrontage with the median of neighborhood
     hdf['LotFrontage'] = hdf.groupby('Neighborhood')['LotFrontage'].transform(lambda x: x.fillna(x.median()))
@@ -75,6 +82,12 @@ def Feature_enginiering(hdf):
     hdf ['TotalBath'] = hdf['FullBath'] + hdf['BsmtFullBath'] + .5*(hdf['HalfBath'] + hdf['BsmtHalfBath'])
     hdf['OtherRoomsAbvGrd'] = hdf['TotRmsAbvGrd'] - hdf['KitchenAbvGr'] - hdf['FullBath']
 
+    hdf['HasPool'] = hdf['PoolArea'].apply(lambda x: 1 if x > 0 else 0)
+    hdf['Has2ndFloor'] = hdf['2ndFlrSF'].apply(lambda x: 1 if x > 0 else 0)
+    hdf['HasGarage'] = hdf['GarageArea'].apply(lambda x: 1 if x > 0 else 0)
+    hdf['HasBsmt'] = hdf['TotalBsmtSF'].apply(lambda x: 1 if x > 0 else 0)
+    hdf['HasFireplace'] = hdf['Fireplaces'].apply(lambda x: 1 if x > 0 else 0)
+
 
     hdf.drop(columns = ['Utilities', 'Street', 'PoolQC'], inplace = True)
     hdf.drop(columns = ['BsmtFinSF1', 'BsmtFinSF2', 'BsmtUnfSF'], inplace = True)
@@ -83,13 +96,12 @@ def Feature_enginiering(hdf):
     hdf.drop(columns = 'MiscFeature', inplace = True)
     hdf.drop(columns = 'TotRmsAbvGrd', inplace = True)
 
-
     ord_feat_num = set(ord_feat_num).union(set(['TotalBath', 'OtherRoomsAbvGrd', 'Remodeled'])) - \
     set(['BsmtFullBath', 'BsmtHalfBath', 'FullBath', 'HalfBath', 'TotRmsAbvGrd',' KitchenAbvGr', 'GarageCars'])
 
     ord_feat_cat = set(ord_feat_cat) - set(['PoolQC'])
 
-    nom_feat = set(nom_feat) - set(['Utilities','MiscFeature','Street'])
+    nom_feat = set(nom_feat).union(['HasPool', 'Has2ndFloor', 'HasGarage', 'HasGarage', 'HasBsmt', 'HasFireplace']) - set(['Utilities','MiscFeature','Street'])
 
     cont_feat = set(cont_feat).union(set(['TotalPorchAreasSF'])) - set(['Utilities', 'Street', 'PoolQC'] +\
                                                                                                               ['BsmtFinSF1', 'BsmtFinSF2', 'BsmtUnfSF'] +\
@@ -128,6 +140,7 @@ def Train_test_random_forest(hdf, ord_feat_num, ord_feat_cat, nom_feat, cont_fea
 def Train_test_normalized(hdf, ord_feat_num, ord_feat_cat, nom_feat, cont_feat):
     # Dummify and Transforming prine to log price
     X = pd.get_dummies(hdf, columns = nom_feat, drop_first=True)
+
 
     for col in set(X.columns) - {'SalePrice', 'Id'}:
         if np.std(X[col]) != 0:
@@ -175,7 +188,7 @@ def main(input_filepath, output_filepath):
     y_train_rf.to_csv(f'{output_filepath}/y_train_rf.csv', index = False, header = 'SalePrice')
     X_test_rf.to_csv(f'{output_filepath}/X_test_rf.csv', index = False)
 
-    X_train_norm, y_train_norm, X_test_norm = Train_test_random_forest(final_df, ord_feat_num, ord_feat_cat, nom_feat, cont_feat)
+    X_train_norm, y_train_norm, X_test_norm = Train_test_normalized(final_df, ord_feat_num, ord_feat_cat, nom_feat, cont_feat)
 
     X_train_norm.to_csv(f'{output_filepath}/X_train_norm.csv', index = False)
     y_train_norm.to_csv(f'{output_filepath}/y_train_norm.csv', index = False, header = 'SalePrice')
